@@ -1,7 +1,9 @@
 import 'package:pratikum4/Animation/FadeAnimation.dart';
 import 'package:flutter/material.dart';
 import 'package:pratikum4/Model/Game.dart';
-import 'package:pratikum4/service/ApiClient.dart';
+import 'package:pratikum4/service/Env.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class FindGame extends StatefulWidget {
   @override
@@ -12,26 +14,25 @@ class _FindGameState extends State<FindGame> {
   List<Game> gameList = [];
 
   Future<List<Game>> getGame() async {
-    ApiClient().get(
-        url: "/games",
-        callback: (status, message, res) {
-          if (status == 200) {
-            if (!(res is Map)) {
-              res.forEach((dynamic data) {
-                gameList.add(Game.fromJson(data as dynamic));
-              });
-            }
-          }
-          return;
-        });
-    return gameList;
+    final resp = await http.get(Env.baseUrl + "/games");
+    if (resp.statusCode != 200) {
+      throw ("gagal Terhubung dengan server (Code: ${resp.statusCode}");
+      return [];
+    }
+    final dynamic res = jsonDecode(resp.body);
+
+    if (resp.statusCode == 200) {
+      res.forEach((dynamic data) {
+        gameList.add(Game.fromJson(data as dynamic));
+      });
+      return gameList;
+    }
   }
 
   @override
   void initState() {
     // ignore: todo
     // TODO: implement initState
-    getGame();
     super.initState();
   }
 
@@ -101,33 +102,46 @@ class _FindGameState extends State<FindGame> {
               ),
               Expanded(
                 child: FutureBuilder<List<Game>>(
-                  // initialData: gameList,
+                  initialData: gameList,
                   future: getGame(),
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      return ListView.builder(
-                        itemBuilder: (context, index) {
-                          return Container(
-                            child: Column(
-                              children: [
-                                FadeAnimation(
-                                  1.5,
-                                  makeItem(
-                                    image: snapshot.data[index].thumbnail,
-                                    title: snapshot.data[index].title,
-                                    genre: snapshot.data[index].genre,
+                      if (snapshot.hasData &&
+                          snapshot.connectionState == ConnectionState.done &&
+                          snapshot.data.length > 0) {
+                        print(snapshot.data.length);
+                        return ListView.builder(
+                          itemCount: snapshot.data.length,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              child: Column(
+                                children: [
+                                  FadeAnimation(
+                                    1.5,
+                                    makeItem(
+                                      image: snapshot.data[index].thumbnail,
+                                      title: snapshot.data[index].title,
+                                      genre: snapshot.data[index].genre,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(
-                                  height: 20,
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      );
+                                  SizedBox(
+                                    height: 20,
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      } else {
+                        print(snapshot.data.length);
+                        return Container();
+                      }
                     } else {
-                      return CircularProgressIndicator();
+                      return Container(
+                        width: 90,
+                        height: 90,
+                        child: CircularProgressIndicator(),
+                      );
                     }
                   },
                 ),
