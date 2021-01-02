@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         end: 30.0
     ).animate(_scaleController)..addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        Navigator.push(context, PageTransition(child: FindGame(), type: PageTransitionType.fade));
+        Navigator.pushReplacement(context, PageTransition(child: FindGame(), type: PageTransitionType.fade));
       }
     });
   }

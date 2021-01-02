@@ -13,8 +13,9 @@ class ApiClient {
     Map<String, String> headers,
     @required ValueChanged callback(int code, String message, dynamic json),
   }) async {
-    var uri = Uri.https(Env.uri, url, param);
-    http.get(uri, headers: headers).then((response) {
+    var uri = Uri.https(Env.baseUrl, url, param);
+
+    http.get(Env.baseUrl+url, headers: headers).then((response) {
       print("GET ${response.statusCode}\n"
           "uri $uri\n"
           "${response.statusCode == 200 ? "" : "${response.body}"}");
@@ -22,7 +23,9 @@ class ApiClient {
       callback(response.statusCode,
           response.statusCode == 200 ? 'Request Sukses' : res["message"], res);
     }).catchError((e) {
+      print(uri.toString());
       print(e);
+
       callback(400, "Terjadi kesalahan", null);
     });
   }

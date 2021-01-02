@@ -1,8 +1,44 @@
 import 'package:pratikum4/Animation/FadeAnimation.dart';
 import 'package:flutter/material.dart';
 import 'package:pratikum4/Model/Game.dart';
+import 'package:pratikum4/service/ApiClient.dart';
+import 'package:pratikum4/service/Env.dart';
 
-class FindGame extends StatelessWidget {
+class FindGame extends StatefulWidget {
+
+  @override
+  _FindGameState createState() => _FindGameState();
+}
+
+class _FindGameState extends State<FindGame> {
+
+
+
+  List<Game> gameList = [];
+
+  getGame(){
+    ApiClient().get(
+      url: "/api/games/",
+      callback: (status, message, res) {
+        print(res.toString());
+        if (status == 200) {
+          if (!(res is Map)) {
+            res.forEach((dynamic data) {
+              gameList.add(Game.fromJson(data as dynamic));
+            });
+          }
+        }
+        return;
+      });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    getGame();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,14 +98,27 @@ class FindGame extends StatelessWidget {
                 ),
               )),
               SizedBox(height: 30,),
-              FadeAnimation(1.2, makeItem(image: 'assets/images/one.jpg', date: 17)),
-              SizedBox(height: 20,),
-              FadeAnimation(1.3, makeItem(image: 'assets/images/two.jpg', date: 18)),
-              SizedBox(height: 20,),
-              FadeAnimation(1.4, makeItem(image: 'assets/images/three.jpg', date: 19)),
-              SizedBox(height: 20,),
-              FadeAnimation(1.5, makeItem(image: 'assets/images/four.jpg', date: 20)),
-              SizedBox(height: 20,),
+              // FadeAnimation(1.2, makeItem(image: 'assets/images/one.jpg', date: 17)),
+              // SizedBox(height: 20,),
+              // FadeAnimation(1.3, makeItem(image: 'assets/images/two.jpg', date: 18)),
+              // SizedBox(height: 20,),
+              // FadeAnimation(1.4, makeItem(image: 'assets/images/three.jpg', date: 19)),
+              // SizedBox(height: 20,),
+              // FadeAnimation(1.5, makeItem(image: 'assets/images/four.jpg', date: 20)),
+              // SizedBox(height: 20,),
+              FutureBuilder(
+                initialData: gameList,
+                builder: (context, snapshot) {
+                  if(snapshot.hasData){
+                    print(snapshot.data);
+                    return Column(children: [
+                      FadeAnimation(1.5, makeItem(image: 'assets/images/four.jpg', title:"sdsd", genre: "asdsa")),
+                      SizedBox(height: 20,),
+                    ],);
+                  }else{
+                    return CircularProgressIndicator();
+                  }
+              },)
             ],
           ),
         ),
@@ -77,7 +126,7 @@ class FindGame extends StatelessWidget {
     );
   }
 
-  Widget makeItem({image, date}) {
+  Widget makeItem({image, title, genre}) {
     return Row(
       children: <Widget>[
         Expanded(
@@ -105,13 +154,13 @@ class FindGame extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
-                  Text("Title Game", style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),),
+                  Text(title, style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),),
                   SizedBox(height: 10,),
                   Row(
                     children: <Widget>[
                       Icon(Icons.airplay_rounded, color: Colors.white,),
                       SizedBox(width: 10,),
-                      Text("Genre", style: TextStyle(color: Colors.white),)
+                      Text(genre, style: TextStyle(color: Colors.white),)
                     ],
                   )
                 ],
