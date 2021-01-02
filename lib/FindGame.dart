@@ -1,41 +1,38 @@
 import 'package:pratikum4/Animation/FadeAnimation.dart';
 import 'package:flutter/material.dart';
 import 'package:pratikum4/Model/Game.dart';
-import 'package:pratikum4/service/ApiClient.dart';
 import 'package:pratikum4/service/Env.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class FindGame extends StatefulWidget {
-
   @override
   _FindGameState createState() => _FindGameState();
 }
 
 class _FindGameState extends State<FindGame> {
-
-
-
   List<Game> gameList = [];
 
-  getGame(){
-    ApiClient().get(
-      url: "/api/games/",
-      callback: (status, message, res) {
-        print(res.toString());
-        if (status == 200) {
-          if (!(res is Map)) {
-            res.forEach((dynamic data) {
-              gameList.add(Game.fromJson(data as dynamic));
-            });
-          }
-        }
-        return;
+  Future<List<Game>> getGame() async {
+    final resp = await http.get(Env.baseUrl + "/games");
+    if (resp.statusCode != 200) {
+      throw ("gagal Terhubung dengan server (Code: ${resp.statusCode}");
+      return [];
+    }
+    final dynamic res = jsonDecode(resp.body);
+
+    if (resp.statusCode == 200) {
+      res.forEach((dynamic data) {
+        gameList.add(Game.fromJson(data as dynamic));
       });
+      return gameList;
+    }
   }
 
   @override
   void initState() {
+    // ignore: todo
     // TODO: implement initState
-    getGame();
     super.initState();
   }
 
@@ -47,7 +44,10 @@ class _FindGameState extends State<FindGame> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         brightness: Brightness.light,
-        leading: Icon(Icons.menu, color: Colors.black,),
+        leading: Icon(
+          Icons.menu,
+          color: Colors.black,
+        ),
         actions: <Widget>[
           Padding(
             padding: EdgeInsets.all(10.0),
@@ -58,9 +58,7 @@ class _FindGameState extends State<FindGame> {
                   borderRadius: BorderRadius.circular(10),
                   image: DecorationImage(
                       image: AssetImage('assets/images/profile.jpg'),
-                      fit: BoxFit.cover
-                  )
-              ),
+                      fit: BoxFit.cover)),
               child: Transform.translate(
                 offset: Offset(15, -15),
                 child: Container(
@@ -68,8 +66,7 @@ class _FindGameState extends State<FindGame> {
                   decoration: BoxDecoration(
                       border: Border.all(width: 3, color: Colors.white),
                       shape: BoxShape.circle,
-                      color: Colors.deepOrange[800]
-                  ),
+                      color: Colors.deepOrange[800]),
                 ),
               ),
             ),
@@ -77,48 +74,78 @@ class _FindGameState extends State<FindGame> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: Container(
           padding: EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              FadeAnimation(1, Container(
-                padding: EdgeInsets.symmetric(vertical: 5),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50),
-                    color: Colors.white
+              FadeAnimation(
+                  1,
+                  Container(
+                    padding: EdgeInsets.symmetric(vertical: 5),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(50),
+                        color: Colors.white),
+                    child: TextField(
+                      decoration: InputDecoration(
+                          border: InputBorder.none,
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: Colors.grey,
+                          ),
+                          hintText: "Search Game",
+                          hintStyle: TextStyle(color: Colors.grey)),
+                    ),
+                  )),
+              SizedBox(
+                height: 30,
+              ),
+              Expanded(
+                child: FutureBuilder<List<Game>>(
+                  initialData: gameList,
+                  future: getGame(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      if (snapshot.hasData &&
+                          snapshot.connectionState == ConnectionState.done &&
+                          snapshot.data.length > 0) {
+                        print(snapshot.data.length);
+                        return ListView.builder(
+                          itemCount: snapshot.data.length,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              child: Column(
+                                children: [
+                                  FadeAnimation(
+                                    1.5,
+                                    makeItem(
+                                      image: snapshot.data[index].thumbnail,
+                                      title: snapshot.data[index].title,
+                                      genre: snapshot.data[index].genre,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 20,
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      } else {
+                        print(snapshot.data.length);
+                        return Container();
+                      }
+                    } else {
+                      return Container(
+                        width: 90,
+                        height: 90,
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  },
                 ),
-                child: TextField(
-                  decoration: InputDecoration(
-                      border: InputBorder.none,
-                      prefixIcon: Icon(Icons.search, color: Colors.grey,),
-                      hintText: "Search Game",
-                      hintStyle: TextStyle(color: Colors.grey)
-                  ),
-                ),
-              )),
-              SizedBox(height: 30,),
-              // FadeAnimation(1.2, makeItem(image: 'assets/images/one.jpg', date: 17)),
-              // SizedBox(height: 20,),
-              // FadeAnimation(1.3, makeItem(image: 'assets/images/two.jpg', date: 18)),
-              // SizedBox(height: 20,),
-              // FadeAnimation(1.4, makeItem(image: 'assets/images/three.jpg', date: 19)),
-              // SizedBox(height: 20,),
-              // FadeAnimation(1.5, makeItem(image: 'assets/images/four.jpg', date: 20)),
-              // SizedBox(height: 20,),
-              FutureBuilder(
-                initialData: gameList,
-                builder: (context, snapshot) {
-                  if(snapshot.hasData){
-                    print(snapshot.data);
-                    return Column(children: [
-                      FadeAnimation(1.5, makeItem(image: 'assets/images/four.jpg', title:"sdsd", genre: "asdsa")),
-                      SizedBox(height: 20,),
-                    ],);
-                  }else{
-                    return CircularProgressIndicator();
-                  }
-              },)
+              )
             ],
           ),
         ),
@@ -135,32 +162,42 @@ class _FindGameState extends State<FindGame> {
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 image: DecorationImage(
-                    image: AssetImage(image),
-                    fit: BoxFit.cover
-                )
-            ),
+                    image: NetworkImage(image), fit: BoxFit.cover)),
             child: Container(
               padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  gradient: LinearGradient(
-                      colors: [
-                        Colors.black.withOpacity(.4),
-                        Colors.black.withOpacity(.1),
-                      ]
-                  )
-              ),
+                  gradient: LinearGradient(colors: [
+                    Colors.black.withOpacity(.4),
+                    Colors.black.withOpacity(.1),
+                  ])),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
-                  Text(title, style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),),
-                  SizedBox(height: 10,),
+                  Text(
+                    title,
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
                   Row(
                     children: <Widget>[
-                      Icon(Icons.airplay_rounded, color: Colors.white,),
-                      SizedBox(width: 10,),
-                      Text(genre, style: TextStyle(color: Colors.white),)
+                      Icon(
+                        Icons.airplay_rounded,
+                        color: Colors.white,
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Text(
+                        genre,
+                        style: TextStyle(color: Colors.white),
+                      )
                     ],
                   )
                 ],
