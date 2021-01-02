@@ -1,5 +1,6 @@
 import 'package:pratikum4/Animation/FadeAnimation.dart';
 import 'package:flutter/material.dart';
+import 'package:pratikum4/Model/Game.dart';
 
 class FindGame extends StatelessWidget {
   @override
