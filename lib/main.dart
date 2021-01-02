@@ -24,7 +24,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     _scaleController = AnimationController(
@@ -44,7 +43,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
 
     _scaleController.dispose();
